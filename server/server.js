@@ -9,41 +9,46 @@ app.use(cors())
 app.use(express.json())
 
 // get all todos
-app.get('/todos/:userEmail', async (req, res) => {
-    const { userEmail } = req.params
+app.get('/todos/:userEmail', async (request, response) => {
+    const { userEmail } = request.params
     try {
         const todos = await pool.query('SELECT * FROM todos WHERE user_email = $1', [userEmail])
-        res.json(todos.rows)
-    } catch (error) {
-        console.error(error)
+        response.json(todos.rows);
+    } catch (exception) {
+        console.error(`failed to get todo from database '${userEmail}', error='${exception.message}'`);
     }
 })
 
 // create a new todo
-app.post('/todos', async (req, res) => {
-    const { user_email, title, progress, date } = req.body
+app.put('/todos', async (request, response) => {
+    const { user_email, title, progress, date } = request.body
     console.log(user_email, title, progress, date)
     const id = uuidv4()
     try {
         const newToDo = await pool.query(`INSERT INTO todos(id, user_email, title, progress, date) VALUES($1, $2, $3, $4, $5)`,
             [id, user_email, title, progress, date])
-        res.json(newToDo)
-    } catch (err) {
-        console.error(err)
+        response.json(newToDo)
+    } catch (exception) {
+        console.error(`failed to add new task, error=${exception}`)
     }
 })
 
-// edit a new todo ***items do not update *** edit button does not work. video time: 1:57:45 
-app.put(`/todos/:id`, async (req, res) => {
-    const { id } = req.params
-    const {user_email, title, progress, date} = req.body
+// edit a new todo 
+app.patch(`/todos/:id`, async (request, response) => {
+    const { id } = request.params
+    const {user_email, title, progress, date} = request.body
     try {
-        const editToDo = await pool.query('UPDATE todos SET user_email = $1, title = $2, progress = $3 date = $4 WHERE id = $5;', [user_email, title, progress, date, id])
-        res.json(editToDo)
-    } catch (err) {
-        console.error(err)
+        const editToDo = await pool.query('UPDATE todos SET title = $1, user_email = $2, date = $3, progress = $4 WHERE id = $5 ;', [title, user_email, date, progress, id]);
+        response.json(editToDo)
+    } catch (exception) {
+        console.error(`failed to edit task, error=${exception}`)
     }
 })
+
+// delete a todo
+
+
+
 
 
 app.listen(PORT, ( )=> console.log(`Server running on PORT ${PORT}`))

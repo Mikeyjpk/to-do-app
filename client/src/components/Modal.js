@@ -7,14 +7,14 @@ const Modal = ({ mode, setShowModal, getData, task}) => {
     user_email: editMode ? task.user_email : 'michael@test.com',
     title: editMode ? task.title : null,
     progress: editMode ? task.progress : 50,
-    data: editMode ? task.date : new Date()
+    date: editMode ? task.date : new Date()
   })
 
-  const postData = async (e) => {
+  const putData = async (e) => {
     e.preventDefault()
     try {
       const response = await fetch('http://localhost:8000/todos', {
-        method: 'POST',
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
       })
@@ -28,11 +28,11 @@ const Modal = ({ mode, setShowModal, getData, task}) => {
     }
   }
 
-  const editData = async (e) => {
+  const patchData = async (e) => {
     e.preventDefault()
     try{
       const response = await fetch(`http://localhost:8000/todos/${task.id}`, {
-        method: 'PUT',
+        method: 'PATCH',
         headers: { 'Content-Type' : 'application/json' },
         body: JSON.stringify(data)
       })
@@ -84,7 +84,7 @@ const Modal = ({ mode, setShowModal, getData, task}) => {
               value={data.progress}
               onChange={handleChange}
             />
-            <input className={mode} type="submit" onClick={editMode ? editData : postData}/>
+            <input className={mode} type="submit" onClick={editMode ? patchData : putData}/>
           </form>
 
         </div>
