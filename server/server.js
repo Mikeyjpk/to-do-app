@@ -4,6 +4,8 @@ const { v4: uuidv4 } = require('uuid')
 const cors = require('cors')
 const app = express()
 const pool = require('./db')
+const bcrypt = require('bcrypt')
+const jwt = require('jsonwebtoken')
 
 app.use(cors())
 app.use(express.json())
@@ -46,9 +48,56 @@ app.patch(`/todos/:id`, async (request, response) => {
 })
 
 // delete a todo
+app.delete('/todos/:id', async (request, response) => {
+    const { id } = request.params
+    
+    try{
+        const deleteToDo = await pool.query('DELETE FROM todos WHERE id = $1;', [id])
+        response.json(deleteToDo)
+    } catch (exception) {
+        console.error(`failed to delete task, error =${exception}`)
+    }  
+})
 
+//signup
+app.post('/signup', async (request, response) => {
+    const {email, password } = request.body
+    const salt = bcrypt.genSaltSync(10)
+    const hashedPassword = bcrypt.hashSync(password, salt)
 
+    try{
+        const signUp = await pool.query(`INSERT INTO users (email, hashed_password) VALUES($1, $2)`, 
+            [email, hashedPassword])
 
+            const token = jwt.sign({ email }, 'secret', { expiresIn: '1hr'} )
+
+            response.json({ email, token })
+
+    } catch (exception) {
+        console.error(`failed to sign up ${exception}`)
+    }
+})
+
+//login
+app.post('/login', async (request, response) => {
+    const {email, password } = request.body
+    try{
+        const users = await pool.query('SELECT * FROM users WHERE email = $1', [email])
+
+        if(!users.rows.length) return response.json({ detail: 'User does not exist' })
+
+        const success = await bcrypt.compare(password, users.rows[0].hashed_password)
+        const token = jwt.sign({ email }, 'secret', { expiresIn: '1hr'} )
+
+        if (success) {
+            response.json({ 'email' : users.rows[0].email, token})
+        } else {
+            response.json({ detail: "Login failed"})
+        }
+    } catch (exception) {
+        console.error(`failed to sign up ${exception}`)
+    }
+})
 
 
 app.listen(PORT, ( )=> console.log(`Server running on PORT ${PORT}`))

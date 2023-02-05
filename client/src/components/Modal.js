@@ -1,10 +1,12 @@
 import { useState } from 'react'
+import { useCookies } from 'react-cookie'
 
 const Modal = ({ mode, setShowModal, getData, task}) => {
+	const [cookies, setCookie, removeCookie] = useCookies(null)
   const editMode = mode === 'edit' ? true : false
 
   const [data, setData] = useState({
-    user_email: editMode ? task.user_email : 'michael@test.com',
+    user_email: editMode ? task.user_email : cookies.Email,
     title: editMode ? task.title : null,
     progress: editMode ? task.progress : 50,
     date: editMode ? task.date : new Date()
@@ -13,7 +15,7 @@ const Modal = ({ mode, setShowModal, getData, task}) => {
   const putData = async (e) => {
     e.preventDefault()
     try {
-      const response = await fetch('http://localhost:8000/todos', {
+      const response = await fetch(`${process.env.REACT_APP_SERVERURL}/todos`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
@@ -31,7 +33,7 @@ const Modal = ({ mode, setShowModal, getData, task}) => {
   const patchData = async (e) => {
     e.preventDefault()
     try{
-      const response = await fetch(`http://localhost:8000/todos/${task.id}`, {
+      const response = await fetch(`${process.env.REACT_APP_SERVERURL}/todos/${task.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type' : 'application/json' },
         body: JSON.stringify(data)
